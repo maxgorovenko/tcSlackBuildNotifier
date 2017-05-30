@@ -16,16 +16,20 @@ import jetbrains.buildServer.serverSide.dependency.CyclicDependencyFoundExceptio
 import jetbrains.buildServer.serverSide.dependency.Dependency;
 import jetbrains.buildServer.serverSide.dependency.Dependent;
 import jetbrains.buildServer.serverSide.identifiers.DuplicateExternalIdException;
+import jetbrains.buildServer.serverSide.parameters.types.TypedValue;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.User;
 import jetbrains.buildServer.util.Option;
 import jetbrains.buildServer.vcs.*;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class MockSBuildType implements SBuildType {
@@ -83,6 +87,11 @@ public class MockSBuildType implements SBuildType {
 
 	public void forceCheckingForChanges() {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void forceCheckingForChanges(@NotNull OperationRequestor operationRequestor) {
 
 	}
 
@@ -360,6 +369,11 @@ public class MockSBuildType implements SBuildType {
 
 	}
 
+	@Override
+	public void removeRequirement(Requirement requirement) {
+
+	}
+
 	public boolean removeVcsRoot(SVcsRoot arg0) {
 		return false;
 		// TODO Auto-generated method stub
@@ -368,6 +382,16 @@ public class MockSBuildType implements SBuildType {
 
 	public void setArtifactDependencies(List<SArtifactDependency> arg0) {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void addArtifactDependency(@NotNull SArtifactDependency sArtifactDependency) {
+
+	}
+
+	@Override
+	public void removeArtifactDependency(@NotNull SArtifactDependency sArtifactDependency) {
 
 	}
 
@@ -532,9 +556,33 @@ public class MockSBuildType implements SBuildType {
 		return null;
 	}
 
+	@NotNull
+	@Override
+	public <T> T getOptionDefaultValue(@NotNull Option<T> option) {
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public <T> T getDeclaredOption(Option<T> option) {
+		return null;
+	}
+
 	public <T> void setOption(Option<T> arg0, T arg1) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@NotNull
+	@Override
+	public Collection<Option> getOwnOptions() {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public Collection<Option> getOptions() {
+		return null;
 	}
 
 	public void addDependency(Dependency arg0)
@@ -558,6 +606,17 @@ public class MockSBuildType implements SBuildType {
 		return 0;
 	}
 
+	@Override
+	public boolean isReadOnly() {
+		return false;
+	}
+
+	@Nullable
+	@Override
+	public String getReadOnlyReason() {
+		return null;
+	}
+
 	public boolean intersectsWith(Dependent arg0) {
 		// TODO Auto-generated method stub
 		return false;
@@ -579,6 +638,12 @@ public class MockSBuildType implements SBuildType {
 
 	public Map<String, String> getParameters() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public String getParameterValue(@NotNull String s) {
 		return null;
 	}
 
@@ -650,6 +715,12 @@ public class MockSBuildType implements SBuildType {
 		return null;
 	}
 
+	@NotNull
+	@Override
+	public Collection<SBuildFeatureDescriptor> getBuildFeaturesOfType(@NotNull String s) {
+		return null;
+	}
+
 	public String getBuildNumberPattern() {
 		// TODO Auto-generated method stub
 		return null;
@@ -683,6 +754,11 @@ public class MockSBuildType implements SBuildType {
 	public BuildTypeTemplate getTemplate() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean isTemplateAccessible() {
+		return false;
 	}
 
 	public String getTemplateId() {
@@ -731,6 +807,16 @@ public class MockSBuildType implements SBuildType {
 		return false;
 	}
 
+	@Override
+	public boolean replaceInValues(@NotNull Pattern pattern, @NotNull String s) {
+		return false;
+	}
+
+	@Override
+	public boolean textValueMatches(@NotNull Pattern pattern) {
+		return false;
+	}
+
 	public void setBuildNumberPattern(String arg0) {
 		// TODO Auto-generated method stub
 		
@@ -740,6 +826,12 @@ public class MockSBuildType implements SBuildType {
 			Map<String, String> arg2) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Nullable
+	@Override
+	public SBuildFeatureDescriptor findBuildFeatureById(@NotNull String s) {
+		return null;
 	}
 
 	public boolean updateBuildRunner(String arg0, String arg1, String arg2,
@@ -755,6 +847,12 @@ public class MockSBuildType implements SBuildType {
 
 	public Collection<Parameter> getParametersCollection() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public Parameter getParameter(@NotNull String s) {
 		return null;
 	}
 
@@ -844,6 +942,12 @@ public class MockSBuildType implements SBuildType {
 		return null;
 	}
 
+	@Nullable
+	@Override
+	public VcsRootInstanceEntry getVcsRootInstanceEntryForParent(@NotNull SVcsRoot sVcsRoot) {
+		return null;
+	}
+
 	public List<VcsRootInstance> getVcsRootInstances() {
 		// TODO Auto-generated method stub
 		return null;
@@ -851,6 +955,12 @@ public class MockSBuildType implements SBuildType {
 
 	public String getVcsSettingsHash() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public String getVcsRootsHash() {
 		return null;
 	}
 
@@ -872,6 +982,11 @@ public class MockSBuildType implements SBuildType {
 	public void persist() throws PersistFailedException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void persist(@NotNull ConfigAction configAction) throws PersistFailedException {
+
 	}
 
 	public void setPaused(boolean arg0, User arg1, String arg2) {
@@ -916,6 +1031,12 @@ public class MockSBuildType implements SBuildType {
 		return true;
 	}
 
+	@NotNull
+	@Override
+	public <T> TypedValue<T> getTypedOption(@NotNull Option<T> option) {
+		return null;
+	}
+
 	@Override
 	public void setEnabled(String arg0, boolean arg1) {
 		// TODO Auto-generated method stub
@@ -934,6 +1055,18 @@ public class MockSBuildType implements SBuildType {
 	@Override
 	public File getConfigurationFile() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public File getConfigurationFile(@NotNull File file) {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public String getConfigId() {
 		return null;
 	}
 
@@ -961,9 +1094,25 @@ public class MockSBuildType implements SBuildType {
 	}
 
 	@Override
+	public void setExternalId(@NotNull ConfigAction configAction, @NotNull String s) throws InvalidIdentifierException, DuplicateExternalIdException, ObsoleteEntityException {
+
+	}
+
+	@Override
 	public SPersistentEntity getParent() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@NotNull
+	@Override
+	public PersistentEntityVersion getVersion() {
+		return null;
+	}
+
+	@Override
+	public void markPersisted(long l) {
+
 	}
 
 	@Override
@@ -986,6 +1135,12 @@ public class MockSBuildType implements SBuildType {
 	@Override
 	public Map<String, String> getOwnParameters() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public Parameter getOwnParameter(@NotNull String s) {
 		return null;
 	}
 
@@ -1025,6 +1180,11 @@ public class MockSBuildType implements SBuildType {
 			throws InvalidVcsRootScopeException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void moveToProject(@NotNull ConfigAction configAction, @NotNull SProject sProject) throws InvalidVcsRootScopeException {
+
 	}
 
 

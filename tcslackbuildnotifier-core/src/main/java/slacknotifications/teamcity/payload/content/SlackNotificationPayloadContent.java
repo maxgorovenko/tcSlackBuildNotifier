@@ -5,17 +5,26 @@ import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.tests.TestInfo;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.vcs.SVcsModification;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import slacknotifications.Attachment;
 import slacknotifications.teamcity.BuildStateEnum;
 import slacknotifications.teamcity.Loggers;
 import slacknotifications.teamcity.SlackNotificator;
 import slacknotifications.teamcity.TeamCityIdResolver;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.*;
 
 public class SlackNotificationPayloadContent {
+    private SRunningBuild sRunningBuild;
     String buildStatus;
     String buildResult;
     String buildResultPrevious;
@@ -46,8 +55,9 @@ public class SlackNotificationPayloadContent {
     String branchDisplayName;
     String buildStateDescription;
     String progressSummary;
-    List<Commit> commits;
+    private List<Commit> commits;
     private boolean isFirstFailedBuild;
+    private String token;
 
     Boolean branchIsDefault;
 
@@ -75,38 +85,42 @@ public class SlackNotificationPayloadContent {
     private boolean isComplete;
     private ArrayList<String> failedBuildMessages = new ArrayList<String>();
     private ArrayList<String> failedTestNames = new ArrayList<String>();
+    private boolean commitsInitialized;
 
     public SlackNotificationPayloadContent(){
 
-        }
+    }
 
     /**
-		 * Constructor: Only called by RepsonsibilityChanged.
-		 * @param server
-		 * @param buildType
-		 * @param buildState
-		 */
-		public SlackNotificationPayloadContent(SBuildServer server, SBuildType buildType, BuildStateEnum buildState) {
-			populateCommonContent(server, buildType, buildState);
-		}
+     * Constructor: Only called by RepsonsibilityChanged.
+     * @param server
+     * @param buildType
+     * @param buildState
+     */
+    public SlackNotificationPayloadContent(SBuildServer server, SBuildType buildType, BuildStateEnum buildState) {
+        populateCommonContent(server, buildType, buildState);
+    }
 
-		/**
-		 * Constructor: Called by everything except RepsonsibilityChanged.
-		 * @param server
-		 * @param sRunningBuild
-		 * @param previousBuild
-		 * @param buildState
-		 */
-		public SlackNotificationPayloadContent(SBuildServer server, SRunningBuild sRunningBuild, SFinishedBuild previousBuild,
-                                               BuildStateEnum buildState) {
+    /**
+     * Constructor: Called by everything except RepsonsibilityChanged.
+     * @param server
+     * @param sRunningBuild
+     * @param previousBuild
+     * @param buildState
+     */
+    public SlackNotificationPayloadContent(SBuildServer server, SRunningBuild sRunningBuild, SFinishedBuild previousBuild,
+                                           BuildStateEnum buildState, String token) {
 
-            this.commits = new ArrayList<Commit>();
-            populateCommonContent(server, sRunningBuild, previousBuild, buildState);
-    		populateMessageAndText(sRunningBuild, buildState);
-            populateCommits(sRunningBuild);
-    		populateArtifacts(sRunningBuild);
-            populateResults(sRunningBuild);
-		}
+        this.token = token;
+        this.commits = new ArrayList<Commit>();
+        this.sRunningBuild = sRunningBuild;
+        this.commitsInitialized = false;
+        populateCommonContent(server, sRunningBuild, previousBuild, buildState);
+        populateMessageAndText(sRunningBuild, buildState);
+        //populateCommits(sRunningBuild);
+        populateArtifacts(sRunningBuild);
+        populateResults(sRunningBuild);
+    }
 
     private void populateResults(SRunningBuild sRunningBuild) {
         List<BuildProblemData> failureReasons = sRunningBuild.getFailureReasons();
@@ -136,54 +150,98 @@ public class SlackNotificationPayloadContent {
     }
 
     private void populateCommits(SRunningBuild sRunningBuild) {
-        List<SVcsModification> changes = sRunningBuild.getContainingChanges();
-        if(changes == null){
+        if (sRunningBuild == null) {
             return;
         }
+
+        List<SVcsModification> changes = sRunningBuild.getContainingChanges();
+        if(changes == null || changes.isEmpty()){
+            return;
+        }
+
+        // get map of slack users email => slack_username
+        Map<String, String> usersByEmails = getUsersMapWithEmailKey();
 
         for(SVcsModification change : changes){
 			Collection<SUser> committers = change.getCommitters();
 			String slackUserName = null;
-			if(committers != null && !committers.isEmpty()){
+			if(!committers.isEmpty() && !committers.isEmpty()){
 				SUser committer = committers.iterator().next();
 				slackUserName = committer.getPropertyValue(SlackNotificator.USERNAME_KEY);
+				if ((slackUserName == null || slackUserName.length() == 0) && usersByEmails.containsKey(committer.getEmail())) {
+                    slackUserName = usersByEmails.get(committer.getEmail());
+                }
 				Loggers.ACTIVITIES.debug("Resolved committer " + change.getUserName() + " to Slack User " + slackUserName);
 			}
-			commits.add(new Commit(change.getVersion(), change.getDescription(), change.getUserName(), slackUserName));
+			this.commits.add(new Commit(change.getVersion(), change.getDescription(), change.getUserName(), slackUserName));
         }
     }
 
+    private Map<String, String> getUsersMapWithEmailKey() {
+        Map<String, String> map = new HashMap<>();
+
+        if (this.token == null) {
+            Loggers.SERVER.warn("SlackNotificationListener :: Getting users.list skipped - missing token");
+            return map;
+        }
+
+        String url = String.format("https://slack.com/api/users.list?token=%s", this.token);
+
+        HttpPost httppost = new HttpPost(url);
+        httppost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        Loggers.SERVER.info("SlackNotificationListener :: Getting users.list from URL " + url + " ");
+
+        try {
+            HttpResponse response = HttpClients.createDefault().execute(httppost);
+            int resultCode = response.getStatusLine().getStatusCode();
+            if (resultCode == HttpStatus.SC_OK) {
+                UsersListResponse responseData = UsersListResponse.fromJson(EntityUtils.toString(response.getEntity()));
+                responseData.getMembers().forEach(member -> map.put(member.profile.email, member.name));
+                Loggers.SERVER.info("SlackNotificationListener :: Got " + responseData.getMembers().size() + " members from api");
+            } else {
+                Loggers.SERVER.info("SlackNotificationListener :: Got error http status :(");
+            }
+        } catch (IOException e) {
+            Loggers.SERVER.error("SlackNotificationListener :: Error: " + e.getMessage());
+            return map;
+        } finally {
+            httppost.releaseConnection();
+        }
+
+        Loggers.SERVER.info("SlackNotificationListener :: Got " + map.size() + " pairs of emails with usernames");
+
+        return map;
+    }
+
     private void populateArtifacts(SRunningBuild runningBuild) {
-			//ArtifactsInfo artInfo = new ArtifactsInfo(runningBuild);
-			//artInfo.
-			
-		}
+        //ArtifactsInfo artInfo = new ArtifactsInfo(runningBuild);
+        //artInfo.
 
-		/**
-		 * Used by RepsonsiblityChanged.
-		 * Therefore, does not have access to a specific build instance.
-		 * @param server
-		 * @param buildType
-		 * @param state
-		 */
-		private void populateCommonContent(SBuildServer server, SBuildType buildType, BuildStateEnum state) {
-			setBuildFullName(buildType.getFullName());
-			setBuildName(buildType.getName());
-			setBuildTypeId(TeamCityIdResolver.getBuildTypeId(buildType));
-			setBuildStatusUrl(server.getRootUrl() + "/viewLog.html?buildTypeId=" + buildType.getBuildTypeId() + "&buildId=lastFinished");
+    }
 
-		}
-		
-		private void populateMessageAndText(SRunningBuild sRunningBuild,
-				BuildStateEnum state) {
-			// Message is a long form message, for on webpages or in email.
+    /**
+     * Used by RepsonsiblityChanged.
+     * Therefore, does not have access to a specific build instance.
+     * @param server
+     * @param buildType
+     * @param state
+     */
+    private void populateCommonContent(SBuildServer server, SBuildType buildType, BuildStateEnum state) {
+        setBuildFullName(buildType.getFullName());
+        setBuildName(buildType.getName());
+        setBuildTypeId(TeamCityIdResolver.getBuildTypeId(buildType));
+        setBuildStatusUrl(server.getRootUrl() + "/viewLog.html?buildTypeId=" + buildType.getBuildTypeId() + "&buildId=lastFinished");
 
-			// Text is designed to be shorter, for use in Text messages and the like.    		
-    		setText(getBuildDescriptionWithLinkSyntax()
-                    + " has " + state.getDescriptionSuffix() + ". Status: " + this.buildResult);
+    }
 
+    private void populateMessageAndText(SRunningBuild sRunningBuild, BuildStateEnum state) {
+        // Message is a long form message, for on webpages or in email.
 
-		}
+        // Text is designed to be shorter, for use in Text messages and the like.
+        setText(getBuildDescriptionWithLinkSyntax() + " has " + state.getDescriptionSuffix() + ". Status: "
+                + this.buildResult);
+    }
 
     /**
      * Used by everything except ResponsibilityChanged. Is passed a valid build instance.
@@ -405,6 +463,10 @@ public class SlackNotificationPayloadContent {
     }
 
     public List<Commit> getCommits() {
+        if (!this.commitsInitialized) {
+            populateCommits(this.sRunningBuild);
+            this.commitsInitialized = true;
+        }
         return commits;
     }
 

@@ -1,6 +1,5 @@
 package slacknotifications.teamcity;
 
-import com.intellij.util.containers.HashMap;
 import jetbrains.buildServer.BuildProject;
 import jetbrains.buildServer.BuildTypeDescriptor.CheckoutType;
 import jetbrains.buildServer.messages.Status;
@@ -14,6 +13,8 @@ import jetbrains.buildServer.vcs.SVcsRoot;
 import jetbrains.buildServer.vcs.UnknownVcsException;
 import jetbrains.buildServer.vcs.VcsRootInstance;
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
@@ -73,6 +74,12 @@ public class MockSProject implements SProject {
 		return buildTypes.get(btName);
 	}
 
+	@Nullable
+	@Override
+	public SBuildType findBuildTypeByExternalId(@Nullable String s) {
+		return null;
+	}
+
 	public void addANewBuildTypeToTheMock(SBuildType build){
 		this.buildTypes.put(build.getBuildTypeId(), build);
 	}
@@ -100,6 +107,12 @@ public class MockSProject implements SProject {
 		return null;
 	}
 
+	@NotNull
+	@Override
+	public File getConfigurationFile(@NotNull File file) {
+		return null;
+	}
+
 	public List<SVcsRoot> getVcsRoots() {
 		// TODO Auto-generated method stub
 		return null;
@@ -117,6 +130,11 @@ public class MockSProject implements SProject {
 
 	public void persist() throws PersistFailedException {
 		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void persist(@NotNull ConfigAction configAction) throws PersistFailedException {
 
 	}
 
@@ -180,8 +198,20 @@ public class MockSProject implements SProject {
 		return null;
 	}
 
+	@Nullable
+	@Override
+	public String getParameterValue(@NotNull String s) {
+		return null;
+	}
+
 	public Collection<Parameter> getParametersCollection() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public Parameter getParameter(@NotNull String s) {
 		return null;
 	}
 
@@ -294,7 +324,13 @@ public class MockSProject implements SProject {
 	}
 
 	// From 8.0
-	
+
+	@NotNull
+	@Override
+	public String getConfigId() {
+		return null;
+	}
+
 	@Override
 	public String getExternalId() {
 		return projectExternalId;
@@ -330,9 +366,26 @@ public class MockSProject implements SProject {
 		return null;
 	}
 
+	@NotNull
+	@Override
+	public PersistentEntityVersion getVersion() {
+		return null;
+	}
+
+	@Override
+	public void markPersisted(long l) {
+
+	}
+
 	@Override
 	public Map<String, String> getOwnParameters() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public Parameter getOwnParameter(@NotNull String s) {
 		return null;
 	}
 
@@ -408,6 +461,81 @@ public class MockSProject implements SProject {
 		return null;
 	}
 
+	@NotNull
+	@Override
+	public SProjectFeatureDescriptor addFeature(@NotNull String s, @NotNull Map<String, String> map) {
+		return null;
+	}
+
+	@Override
+	public void addFeature(@NotNull SProjectFeatureDescriptor sProjectFeatureDescriptor) {
+
+	}
+
+	@NotNull
+	@Override
+	public Collection<SProjectFeatureDescriptor> getOwnFeatures() {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public Collection<SProjectFeatureDescriptor> getOwnFeaturesOfType(@NotNull String s) {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public Collection<SProjectFeatureDescriptor> getAvailableFeaturesOfType(@NotNull String s) {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public Collection<SProjectFeatureDescriptor> getAvailableFeatures() {
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public SProjectFeatureDescriptor removeFeature(@NotNull String s) {
+		return null;
+	}
+
+	@Override
+	public boolean updateFeature(@NotNull String s, @NotNull String s1, @NotNull Map<String, String> map) {
+		return false;
+	}
+
+	@Nullable
+	@Override
+	public SProjectFeatureDescriptor findFeatureById(@NotNull String s) {
+		return null;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return false;
+	}
+
+	@Nullable
+	@Override
+	public String getReadOnlyReason() {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public CustomDataStorage getCustomDataStorage(@NotNull String s) {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public Status getStatus(@NotNull String s) {
+		return null;
+	}
+
 	@Override
 	public SVcsRoot createVcsRoot(String arg0, String arg1,
 			Map<String, String> arg2) throws UnknownVcsException,
@@ -458,6 +586,12 @@ public class MockSProject implements SProject {
 	@Override
 	public List<BuildTypeTemplate> getAvailableTemplates() {
 		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public List<SVcsRoot> getAvailableVcsRoots() {
 		return null;
 	}
 
@@ -538,6 +672,11 @@ public class MockSProject implements SProject {
 	}
 
 	@Override
+	public void moveToProject(@NotNull ConfigAction configAction, @NotNull SProject sProject) throws CyclicDependencyException, InvalidVcsRootScopeException {
+
+	}
+
+	@Override
 	public void remove() {
 		// TODO Auto-generated method stub
 		
@@ -548,6 +687,11 @@ public class MockSProject implements SProject {
 			DuplicateExternalIdException {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void setExternalId(@NotNull ConfigAction configAction, @NotNull String s) throws InvalidIdentifierException, DuplicateExternalIdException, ObsoleteEntityException {
+
 	}
 
 	public void addChildProjectToMock(SProject sProject) {

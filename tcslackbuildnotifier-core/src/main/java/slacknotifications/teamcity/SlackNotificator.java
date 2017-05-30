@@ -70,7 +70,7 @@ public class SlackNotificator implements Notificator {
                 continue;
             }
             SlackNotification slackNotification = createNotification(sUser);
-            slackNotification.setPayload(payloadManager.buildStarted(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild)));
+            slackNotification.setPayload(payloadManager.buildStarted(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild), mainConfig.getToken()));
             doNotification(slackNotification);
         }
     }
@@ -82,7 +82,7 @@ public class SlackNotificator implements Notificator {
                 continue;
             }
             SlackNotification slackNotification = createNotification(sUser);
-            slackNotification.setPayload(payloadManager.buildFinished(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild)));
+            slackNotification.setPayload(payloadManager.buildFinished(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild), mainConfig.getToken()));
             doNotification(slackNotification);
         }
     }
@@ -94,7 +94,7 @@ public class SlackNotificator implements Notificator {
                 continue;
             }
             SlackNotification slackNotification = createNotification(sUser);
-            slackNotification.setPayload(payloadManager.buildFinished(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild)));
+            slackNotification.setPayload(payloadManager.buildFinished(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild), mainConfig.getToken()));
             doNotification(slackNotification);
         }
     }
@@ -115,7 +115,7 @@ public class SlackNotificator implements Notificator {
                 continue;
             }
             SlackNotification slackNotification = createNotification(sUser);
-            slackNotification.setPayload(payloadManager.beforeBuildFinish(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild)));
+            slackNotification.setPayload(payloadManager.beforeBuildFinish(sRunningBuild, getPreviousNonPersonalBuild(sRunningBuild), mainConfig.getToken()));
             doNotification(slackNotification);
         }
     }
